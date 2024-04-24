@@ -5,7 +5,14 @@ description = "Add your description here"
 authors = [
     { name = "tanashou", email = "tanashou0210@gmail.com" }
 ]
-dependencies = []
+dependencies = [
+    "requests>=2.31.0",
+    "selenium>=4.19.0",
+    "webdriver-manager>=4.0.1",
+    "mypy>=1.9.0",
+    "types-requests>=2.31.0.20240406",
+    "pytest>=8.1.1",
+]
 readme = "README.md"
 requires-python = ">= 3.8"
 
@@ -16,6 +23,10 @@ build-backend = "hatchling.build"
 [tool.rye]
 managed = true
 dev-dependencies = []
+
+[tool.mypy]
+ignore_missing_imports = true
+strict = true
 
 [tool.hatch.metadata]
 allow-direct-references = true
