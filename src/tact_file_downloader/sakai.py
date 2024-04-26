@@ -15,6 +15,7 @@ from requests.cookies import RequestsCookieJar
 from sakai_site import SakaiSite
 from paginated_list import PaginatedList
 from requester import Requester
+from sakai_content import SakaiContent
 
 
 class Sakai:
@@ -124,7 +125,6 @@ class Sakai:
             for json_data in json_list:
                 for site in json_data["site_collection"]:
                     result.append(SakaiSite(title=site["title"], id=site["id"]))
-
             return result
 
         endpoint = "direct/site.json"
@@ -135,14 +135,31 @@ class Sakai:
 
         return parse_to_sites(sites_json)
 
-    # def get_site_content_collection
+    def get_contents(self, site_id: str) -> list[SakaiContent]:
+        def parse_to_contents(json_data: dict[Any, Any]) -> list[SakaiContent]:
+            result = []
+            for content in json_data["content_collection"]:
+                result.append(
+                    SakaiContent(
+                        title=content["title"],
+                        type=content["type"],
+                        url=content["url"],
+                        size=content["size"],
+                    )
+                )
+            return result
+
+        endpoint = f"direct/content/site/{site_id}.json"
+        url = self.BASE_URL + endpoint
+        response = self.__requester.request("GET", _url=url)
+        return parse_to_contents(response.json())
 
 
 if __name__ == "__main__":
     sakai = Sakai()
-    sites = sakai.get_site_collection()
-    for site in sites:
-        print(site)
+    test_id = "g_2024_1ULL02040b"
+    response = sakai.get_contents(test_id)
+    print(response)
 
     # for site in sites.sites:
     #     print(site)
