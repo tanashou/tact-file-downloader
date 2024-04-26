@@ -11,7 +11,9 @@ from typing import Any
 from requests.utils import cookiejar_from_dict
 from requests.cookies import RequestsCookieJar
 
+# TODO: 先頭に tact_file_downloader をつけたい
 from sakai_site import SakaiSite
+from paginated_list import PaginatedList
 from requester import Requester
 
 
@@ -125,33 +127,22 @@ class Sakai:
 
             return result
 
-        sites_json = []
         endpoint = "direct/site.json"
-
-        start = 1
-        limit = 50
-
-        while True:
-            params = {
-                "_start": start,
-                "_limit": limit,
-            }
-
-            response = self.__requester.request("GET", endpoint, _params=params)
-            json_data = response.json()
-            if json_data["site_collection"] == []:
-                break
-
-            sites_json.append(json_data)
-            start += limit
+        url = self.BASE_URL + endpoint
+        sites_json = PaginatedList(
+            self.__requester, url, key="site_collection"
+        ).get_all_json()
 
         return parse_to_sites(sites_json)
+
+    # def get_site_content_collection
 
 
 if __name__ == "__main__":
     sakai = Sakai()
     sites = sakai.get_site_collection()
-    print(sites)
+    for site in sites:
+        print(site)
 
     # for site in sites.sites:
     #     print(site)
