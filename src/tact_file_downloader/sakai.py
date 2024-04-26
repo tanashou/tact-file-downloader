@@ -1,5 +1,4 @@
 import os
-import requests
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
@@ -13,13 +12,15 @@ from requests.utils import cookiejar_from_dict
 from requests.cookies import RequestsCookieJar
 
 from sakai_site import SakaiSite
+from requester import Requester
 
 
 class Sakai:
     BASE_URL = "https://tact.ac.thers.ac.jp/"
 
     def __init__(self) -> None:
-        self.cookie_jar = self._get_cookiejar()
+        cookie_jar = self._get_cookiejar()
+        self.__requester = Requester(self.BASE_URL, cookie_jar)
 
     def _get_cookiejar(self) -> RequestsCookieJar:
         driver = None
@@ -115,11 +116,6 @@ class Sakai:
 
         return driver
 
-    def create_session(self) -> requests.Session:
-        session = requests.Session()
-        session.cookies.update(self.cookie_jar)
-        return session
-
     def get_site_collection(self) -> list[SakaiSite]:
         def parse_to_sites(json_list: list[dict[Any, Any]]) -> list[SakaiSite]:
             result = []
@@ -130,8 +126,7 @@ class Sakai:
             return result
 
         sites_json = []
-        session = self.create_session()
-        request_url = self.BASE_URL + "direct/site.json"
+        endpoint = "direct/site.json"
 
         start = 1
         limit = 50
@@ -141,13 +136,8 @@ class Sakai:
                 "_start": start,
                 "_limit": limit,
             }
-            try:
-                response = session.get(request_url, params=params)
-                response.raise_for_status()
-            except requests.exceptions.HTTPError as e:
-                print(f"HTTPError: {e}")
-                break
 
+            response = self.__requester.request("GET", endpoint, _params=params)
             json_data = response.json()
             if json_data["site_collection"] == []:
                 break

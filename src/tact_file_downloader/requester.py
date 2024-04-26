@@ -8,6 +8,7 @@ class Requester:
         self.base_url = base_url
         self.cookie_jar = cookie_jar
         self._session = requests.Session()
+        self._session.cookies.update(cookie_jar)
 
     def _get_request(
         self, url: str, headers: dict[str, str], params: dict[str, Any] | None = None
