@@ -1,6 +1,5 @@
 import os
 import requests
-from requests.utils import cookiejar_from_dict
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
@@ -10,19 +9,23 @@ from selenium.webdriver import ChromeOptions
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import TimeoutException
 from typing import Any
+from requests.utils import cookiejar_from_dict
+from requests.cookies import RequestsCookieJar
+
+from sakai_site import SakaiSite
 
 
 class Sakai:
-    SITE_COLLECTION_JSON_URL = "https://tact.ac.thers.ac.jp/direct/site.json"
+    BASE_URL = "https://tact.ac.thers.ac.jp/"
 
     def __init__(self) -> None:
-        self.set_cookiejar()
+        self.cookie_jar = self._get_cookiejar()
 
-    def set_cookiejar(self) -> None:
+    def _get_cookiejar(self) -> RequestsCookieJar:
         driver = None
         selenium_cookies = None
         try:
-            driver = self.login()
+            driver = self._login()
             selenium_cookies = driver.get_cookies()
         except TimeoutException as e:
             print("タイムアウトしました。もう一度試してください。")
@@ -31,9 +34,9 @@ class Sakai:
             if driver is not None:
                 driver.quit()
         cookie_dict = {cookie["name"]: cookie["value"] for cookie in selenium_cookies}
-        self.cookie_jar = cookiejar_from_dict(cookie_dict)  # type: ignore
+        return cookiejar_from_dict(cookie_dict)  # type: ignore
 
-    def login(self) -> webdriver.Chrome:
+    def _login(self) -> webdriver.Chrome:
         def wait_for_page_load(driver: webdriver.Chrome) -> Any:
             return WebDriverWait(driver, 10).until(
                 lambda d: d.execute_script("return document.readyState") == "complete"  # type: ignore
@@ -117,12 +120,48 @@ class Sakai:
         session.cookies.update(self.cookie_jar)
         return session
 
+    def get_site_collection(self) -> list[SakaiSite]:
+        def parse_to_sites(json_list: list[dict[Any, Any]]) -> list[SakaiSite]:
+            result = []
+            for json_data in json_list:
+                for site in json_data["site_collection"]:
+                    result.append(SakaiSite(title=site["title"], id=site["id"]))
 
-portal_url = "https://tact.ac.thers.ac.jp/portal"
+            return result
+
+        sites_json = []
+        session = self.create_session()
+        request_url = self.BASE_URL + "direct/site.json"
+
+        start = 1
+        limit = 50
+
+        while True:
+            params = {
+                "_start": start,
+                "_limit": limit,
+            }
+            try:
+                response = session.get(request_url, params=params)
+                response.raise_for_status()
+            except requests.exceptions.HTTPError as e:
+                print(f"HTTPError: {e}")
+                break
+
+            json_data = response.json()
+            if json_data["site_collection"] == []:
+                break
+
+            sites_json.append(json_data)
+            start += limit
+
+        return parse_to_sites(sites_json)
+
 
 if __name__ == "__main__":
     sakai = Sakai()
-    session = sakai.create_session()
-    test_url = "https://tact.ac.thers.ac.jp/direct/site.json"
-    response = session.get(test_url)
-    print(response.text)
+    sites = sakai.get_site_collection()
+    print(sites)
+
+    # for site in sites.sites:
+    #     print(site)
