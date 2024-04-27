@@ -9,7 +9,7 @@ class SakaiContent:
     url: str
     site_title: str
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         path_parts = self.container.split("/")
         path_parts[2] = self.site_title # replace the site_id with the site_title
         self.path = "/".join(path_parts[2:]) # remove the first two parts of the path

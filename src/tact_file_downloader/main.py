@@ -2,16 +2,17 @@ from sakai import Sakai
 from content_downloader import ContentDownloader
 from multiprocessing import Pool
 from directory_selector import DirectorySelector
+from typing import Any
 
 
-def download_process(args):
+def download_process(args: Any) -> None:
     content, cookie_jar, save_root_path = args
     downloader = ContentDownloader(cookie_jar, save_root_path)
     downloader.download_and_save_file(content)
 
 
 # TODO: クラス内定数をここから初期化したい。
-def main():
+def main() -> None:
     POOL_SIZE = 8
 
     sakai = Sakai()

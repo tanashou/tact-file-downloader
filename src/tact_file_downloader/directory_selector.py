@@ -5,7 +5,7 @@ import os
 
 
 class DirectorySelector:
-    def __init__(self):
+    def __init__(self) -> None:
         current_dir = os.path.dirname(__file__)
         grandparent_dir = os.path.dirname(os.path.dirname(current_dir))
         self.config_path = os.path.join(grandparent_dir, "config.ini")
@@ -21,7 +21,7 @@ class DirectorySelector:
         directory = filedialog.askdirectory()
         return directory
 
-    def __get_save_root_path(self):
+    def __get_save_root_path(self) -> str:
         config = configparser.ConfigParser()
         config.read(self.config_path)
 
@@ -41,7 +41,9 @@ class DirectorySelector:
 
         return save_root_path
 
-    def __update_config(self, config, section, key, value) -> None:
+    def __update_config(
+        self, config: configparser.ConfigParser, section: str, key: str, value: str
+    ) -> None:
         config.set(section, key, value)
 
         with open(self.config_path, "w") as config_file:
