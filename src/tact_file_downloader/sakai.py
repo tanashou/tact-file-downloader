@@ -16,6 +16,7 @@ from sakai_site import SakaiSite
 from paginated_list import PaginatedList
 from requester import Requester
 from sakai_content import SakaiContent
+from content_downloader import ContentDownloader
 
 
 class Sakai:
@@ -23,7 +24,7 @@ class Sakai:
 
     def __init__(self) -> None:
         cookie_jar = self._get_cookiejar()
-        self.__requester = Requester(self.BASE_URL, cookie_jar)
+        self.requester = Requester(self.BASE_URL, cookie_jar)
 
     def _get_cookiejar(self) -> RequestsCookieJar:
         driver = None
@@ -130,36 +131,39 @@ class Sakai:
         endpoint = "direct/site.json"
         url = self.BASE_URL + endpoint
         sites_json = PaginatedList(
-            self.__requester, url, key="site_collection"
+            self.requester, url, key="site_collection"
         ).get_all_json()
 
         return parse_to_sites(sites_json)
 
-    def get_contents(self, site_id: str) -> list[SakaiContent]:
+    def get_contents(self, site_id: str, site_title: str) -> list[SakaiContent]:
         def parse_to_contents(json_data: dict[Any, Any]) -> list[SakaiContent]:
             result = []
             for content in json_data["content_collection"]:
                 result.append(
                     SakaiContent(
+                        container=content["container"],
                         title=content["title"],
                         type=content["type"],
                         url=content["url"],
-                        size=content["size"],
+                        site_title=site_title,
                     )
                 )
             return result
 
         endpoint = f"direct/content/site/{site_id}.json"
         url = self.BASE_URL + endpoint
-        response = self.__requester.request("GET", _url=url)
+        response = self.requester.request("GET", _url=url)
         return parse_to_contents(response.json())
 
 
+# collectionはディレクトリ名。それ以外はファイル名
 if __name__ == "__main__":
     sakai = Sakai()
-    test_id = "g_2024_1ULL02040b"
-    response = sakai.get_contents(test_id)
-    print(response)
-
-    # for site in sites.sites:
-    #     print(site)
+    sites = sakai.get_site_collection()
+    for site in sites:
+        content = sakai.get_contents(site.id, site.title)
+        for c in content:
+            if c.type != "collection":
+                downloader = ContentDownloader(sakai.requester.cookie_jar)
+                downloader.download_and_save_file(c)
