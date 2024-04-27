@@ -11,7 +11,7 @@ from typing import Any
 from requests.utils import cookiejar_from_dict
 from requests.cookies import RequestsCookieJar
 
-# TODO: 先頭に tact_file_downloader をつけたい
+# cannot import like 'from tact_file_downloader.sakai_site import SakaiSite'. maybe of uv bug.
 from sakai_site import SakaiSite
 from paginated_list import PaginatedList
 from requester import Requester
@@ -19,9 +19,8 @@ from sakai_content import SakaiContent
 
 
 class Sakai:
-    BASE_URL = "https://tact.ac.thers.ac.jp/"
-
-    def __init__(self) -> None:
+    def __init__(self, base_url: str) -> None:
+        self.BASE_URL = base_url
         cookie_jar = self._get_cookiejar()
         self.requester = Requester(self.BASE_URL, cookie_jar)
 
@@ -58,7 +57,7 @@ class Sakai:
         ONETIME_PASSWORD_INPUT_BOX_ID = "idTxtBx_SAOTCC_OTC"
         VERIFY_BUTTON_ID = "idSubmit_SAOTCC_Continue"
         ACCEPT_BUTTON_XPATH = '//input[@name="_eventId_proceed"]'
-        login_url = "https://tact.ac.thers.ac.jp/sakai-login-tool/container/"
+        login_url = f"{self.BASE_URL}sakai-login-tool/container/"
 
         options = ChromeOptions()
         options.add_argument("--headless")

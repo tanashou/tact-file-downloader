@@ -11,11 +11,11 @@ def download_process(args: Any) -> None:
     downloader.download_and_save_file(content)
 
 
-# TODO: クラス内定数をここから初期化したい。
 def main() -> None:
     POOL_SIZE = 8
+    BASE_URL = "https://tact.ac.thers.ac.jp/"
 
-    sakai = Sakai()
+    sakai = Sakai(BASE_URL)
     sites = sakai.get_site_collection()
     selector = DirectorySelector()
     tasks = []
