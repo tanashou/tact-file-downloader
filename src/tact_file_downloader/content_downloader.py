@@ -6,10 +6,10 @@ import os
 
 class ContentDownloader:
     def __init__(
-        self, cookie_jar: RequestsCookieJar, save_root_path: str | None = None
+        self, cookie_jar: RequestsCookieJar, save_root_path: str
     ) -> None:
         self.cookie_jar = cookie_jar
-        self.save_root_path = save_root_path or os.getcwd()
+        self.save_root_path = save_root_path
 
     def download_and_save_file(self, content: SakaiContent) -> None:
         session = requests.Session()

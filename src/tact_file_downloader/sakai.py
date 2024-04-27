@@ -155,15 +155,3 @@ class Sakai:
         url = self.BASE_URL + endpoint
         response = self.requester.request("GET", _url=url)
         return parse_to_contents(response.json())
-
-
-# collectionはディレクトリ名。それ以外はファイル名
-if __name__ == "__main__":
-    sakai = Sakai()
-    sites = sakai.get_site_collection()
-    for site in sites:
-        content = sakai.get_contents(site.id, site.title)
-        for c in content:
-            if c.type != "collection":
-                downloader = ContentDownloader(sakai.requester.cookie_jar)
-                downloader.download_and_save_file(c)
