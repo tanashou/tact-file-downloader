@@ -3,6 +3,7 @@ from content_downloader import ContentDownloader
 from multiprocessing import Pool
 from directory_selector import DirectorySelector
 from typing import Any
+import os
 
 
 def download_process(args: Any) -> None:
@@ -23,7 +24,18 @@ def main() -> None:
         contents = sakai.get_contents(site.id, site.title)
         for content in contents:
             # if the type is 'collection', it is a folder. otherwise, it is a file.
-            if content.type != "collection":
+            if content.is_site_root:
+                # create directory for the site. it creates a directory if there was no contents in the site.
+                # check if the directory exists to avoid creating a directory for the site with no contents.
+                if not os.path.exists(
+                    os.path.join(selector.save_root_path, content.title)
+                ):
+                    os.makedirs(
+                        os.path.join(selector.save_root_path, content.title),
+                        exist_ok=True,
+                    )
+                    print(f"Created directory: {content.title}")
+            elif content.type != "collection":
                 task = (content, sakai.requester.cookie_jar, selector.save_root_path)
                 tasks.append(task)
 
