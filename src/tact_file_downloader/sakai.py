@@ -16,7 +16,6 @@ from sakai_site import SakaiSite
 from paginated_list import PaginatedList
 from requester import Requester
 from sakai_content import SakaiContent
-from content_downloader import ContentDownloader
 
 
 class Sakai:
