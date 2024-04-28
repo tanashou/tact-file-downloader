@@ -4,7 +4,7 @@
 
 ## Requirements
 
--   [rye](https://rye-up.com) (macOS でのみ動作確認済み。他の OS でも同様に動作するはずです。)
+-   [rye](https://rye-up.com)
 
 ## Installation
 
