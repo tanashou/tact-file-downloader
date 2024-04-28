@@ -11,7 +11,7 @@ from typing import Any
 from requests.utils import cookiejar_from_dict
 from requests.cookies import RequestsCookieJar
 
-# cannot import like 'from tact_file_downloader.sakai_site import SakaiSite'. maybe of uv bug.
+# cannot import like 'from tact_file_downloader.sakai_site import SakaiSite'
 from sakai_site import SakaiSite
 from paginated_list import PaginatedList
 from requester import Requester
