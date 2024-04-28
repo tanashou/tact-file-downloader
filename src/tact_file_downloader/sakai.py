@@ -61,6 +61,7 @@ class Sakai:
 
         options = ChromeOptions()
         options.add_argument("--headless")
+        options.add_argument("--log_level=3")
         driver = webdriver.Chrome(
             service=Service(ChromeDriverManager().install()), options=options
         )
