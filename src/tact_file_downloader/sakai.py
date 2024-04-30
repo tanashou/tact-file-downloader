@@ -160,7 +160,7 @@ class Sakai:
         return parse_to_contents(response.json())
 
     def get_otp(self) -> str:
-        otp_uri = os.getenv("TACT_OTP")
+        otp_uri = os.getenv("TACT_OTP_URI")
 
         if otp_uri:
             parsed_uri = urlparse(otp_uri)
