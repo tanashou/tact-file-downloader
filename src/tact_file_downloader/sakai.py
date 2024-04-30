@@ -179,8 +179,6 @@ class Sakai:
         else:
             return input("ワンタイムパスワードを入力してください:\n>")
 
-    # TODO: 違う方法を選ぶ→use a verification code を選択するの順番にする。
-
     def _transition_to_otp_input_window(self, driver) -> None:
         self.wait_for_page_load(driver)
         change_sign_in_mode_button = WebDriverWait(driver, 10).until(
