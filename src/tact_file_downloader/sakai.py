@@ -10,6 +10,8 @@ from selenium.common.exceptions import TimeoutException
 from typing import Any
 from requests.utils import cookiejar_from_dict
 from requests.cookies import RequestsCookieJar
+import pyotp
+from urllib.parse import urlparse, parse_qs
 
 # cannot import like 'from tact_file_downloader.sakai_site import SakaiSite'
 from sakai_site import SakaiSite
@@ -93,9 +95,11 @@ class Sakai:
         otp_input = WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable((By.ID, ONETIME_PASSWORD_INPUT_BOX_ID))
         )
-        otp_input.send_keys(
-            input("ワンタイムパスワードを入力してください:\n>")
-        )  # TODO: OTPを生成して入力する手間を省きたい
+
+        otp = self.get_otp()
+        if not otp:
+            otp = input(input("ワンタイムパスワードを入力してください:\n>"))
+        otp_input.send_keys(otp)
 
         wait_for_page_load(driver)
         verify_button = WebDriverWait(driver, 10).until(
@@ -154,3 +158,21 @@ class Sakai:
         url = self.BASE_URL + endpoint
         response = self.requester.request("GET", _url=url)
         return parse_to_contents(response.json())
+
+    def get_otp(self) -> str:
+        otp_uri = os.getenv("TACT_OTP")
+
+        if otp_uri:
+            parsed_uri = urlparse(otp_uri)
+            query_params = parse_qs(parsed_uri.query)
+
+            if "secret" in query_params:
+                secret_key = query_params["secret"][0]
+                totp = pyotp.TOTP(secret_key)
+                otp = totp.now()
+
+                return otp
+            else:
+                raise ValueError("The secret key could not be found in the URI.")
+        else:
+            return ""
