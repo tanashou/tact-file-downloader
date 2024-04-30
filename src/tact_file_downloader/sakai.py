@@ -91,7 +91,6 @@ class Sakai:
         )
         sign_in_button.click()
 
-        # FIXME: OTP入力ページへの遷移
         self._transition_to_otp_input_window(driver)
 
         self.wait_for_page_load(driver)
