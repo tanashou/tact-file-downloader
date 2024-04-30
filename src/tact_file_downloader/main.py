@@ -17,7 +17,7 @@ def main() -> None:
     BASE_URL = "https://tact.ac.thers.ac.jp/"
 
     sakai = Sakai(BASE_URL)
-    sites = sakai.get_site_collection()
+    sites = sakai.get_favorite_sites()
     selector = DirectorySelector()
     tasks = []
     for site in sites:

@@ -132,7 +132,7 @@ class Sakai:
             return result
 
         endpoint = "direct/site.json"
-        url = self.BASE_URL + endpoint
+        url = f"{self.BASE_URL}{endpoint}"
         sites_json = PaginatedList(
             self.requester, url, key="site_collection"
         ).get_all_json()
@@ -155,8 +155,7 @@ class Sakai:
             return result
 
         endpoint = f"direct/content/site/{site_id}.json"
-        url = self.BASE_URL + endpoint
-        response = self.requester.request("GET", _url=url)
+        response = self.requester.request("GET", _url=f"{self.BASE_URL}{endpoint}")
         return parse_to_contents(response.json())
 
     def _get_otp(self) -> str:
@@ -193,3 +192,20 @@ class Sakai:
             )
         )
         use_verification_code_button.click()
+
+    def _get_favorite_sites_id(self) -> list[str]:
+        endpoint = "portal/favorites/list.json"
+        response = self.requester.request("GET", _url=f"{self.BASE_URL}{endpoint}")
+        return response.json()["favoriteSiteIds"]
+
+    def get_favorite_sites(self) -> list[SakaiSite]:
+        result = []
+
+        sites_id = self._get_favorite_sites_id()
+        for site_id in sites_id:
+            endpoint = f"direct/site/{site_id}.json"
+            response = self.requester.request("GET", _url=f"{self.BASE_URL}{endpoint}")
+            json_data = response.json()
+            result.append(SakaiSite(title=json_data["title"], id=site_id))
+
+        return result
