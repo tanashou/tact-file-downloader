@@ -62,7 +62,7 @@ class Sakai:
         login_url = f"{self.BASE_URL}sakai-login-tool/container/"
 
         options = ChromeOptions()
-        # options.add_argument("--headless")
+        options.add_argument("--headless")
         options.add_argument("--log_level=3")
         driver = webdriver.Chrome(
             service=Service(ChromeDriverManager().install()), options=options
