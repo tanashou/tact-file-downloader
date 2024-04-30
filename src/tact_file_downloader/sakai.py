@@ -41,12 +41,12 @@ class Sakai:
         cookie_dict = {cookie["name"]: cookie["value"] for cookie in selenium_cookies}
         return cookiejar_from_dict(cookie_dict)  # type: ignore
 
-    def _login(self) -> webdriver.Chrome:
-        def wait_for_page_load(driver: webdriver.Chrome) -> Any:
-            return WebDriverWait(driver, 10).until(
-                lambda d: d.execute_script("return document.readyState") == "complete"  # type: ignore
-            )
+    def wait_for_page_load(self, driver: webdriver.Chrome) -> Any:
+        return WebDriverWait(driver, 10).until(
+            lambda d: d.execute_script("return document.readyState") == "complete"  # type: ignore
+        )
 
+    def _login(self) -> webdriver.Chrome:
         USERNAME = os.environ.get("TACT_USERNAME")
         PASSWORD = os.environ.get("TACT_PASSWORD")
 
@@ -62,26 +62,26 @@ class Sakai:
         login_url = f"{self.BASE_URL}sakai-login-tool/container/"
 
         options = ChromeOptions()
-        options.add_argument("--headless")
+        # options.add_argument("--headless")
         options.add_argument("--log_level=3")
         driver = webdriver.Chrome(
             service=Service(ChromeDriverManager().install()), options=options
         )
         driver.get(login_url)
 
-        wait_for_page_load(driver)
+        self.wait_for_page_load(driver)
         email_input = WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable((By.ID, EMAIL_INPUT_BOX_ID))
         )
         email_input.send_keys(USERNAME)
 
-        wait_for_page_load(driver)
+        self.wait_for_page_load(driver)
         next_button = WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable((By.ID, CONFIRM_BUTTON_ID))
         )
         next_button.click()
 
-        wait_for_page_load(driver)
+        self.wait_for_page_load(driver)
         password_input = WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable((By.ID, PASSWORD_INPUT_BOX_ID))
         )
@@ -91,35 +91,36 @@ class Sakai:
         )
         sign_in_button.click()
 
-        wait_for_page_load(driver)
+        # FIXME: OTP入力ページへの遷移
+        self._transition_to_otp_input_window(driver)
+
+        self.wait_for_page_load(driver)
         otp_input = WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable((By.ID, ONETIME_PASSWORD_INPUT_BOX_ID))
         )
 
-        otp = self.get_otp()
-        if not otp:
-            otp = input(input("ワンタイムパスワードを入力してください:\n>"))
+        otp = self._get_otp()
         otp_input.send_keys(otp)
 
-        wait_for_page_load(driver)
+        self.wait_for_page_load(driver)
         verify_button = WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable((By.ID, VERIFY_BUTTON_ID))
         )
         verify_button.click()
 
-        wait_for_page_load(driver)
+        self.wait_for_page_load(driver)
         stay_signed_in_button = WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable((By.ID, CONFIRM_BUTTON_ID))
         )
         stay_signed_in_button.click()
 
-        wait_for_page_load(driver)
+        self.wait_for_page_load(driver)
         accept_button = WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable((By.XPATH, ACCEPT_BUTTON_XPATH))
         )
         accept_button.click()
 
-        wait_for_page_load(driver)
+        self.wait_for_page_load(driver)
 
         return driver
 
@@ -159,7 +160,7 @@ class Sakai:
         response = self.requester.request("GET", _url=url)
         return parse_to_contents(response.json())
 
-    def get_otp(self) -> str:
+    def _get_otp(self) -> str:
         otp_uri = os.getenv("TACT_OTP_URI")
 
         if otp_uri:
@@ -173,6 +174,25 @@ class Sakai:
 
                 return otp
             else:
-                raise ValueError("The secret key could not be found in the URI.")
+                raise ValueError(
+                    "ワンタイムパスワードを生成できませんでした。URIが正しいか確認してください。"
+                )
         else:
-            return ""
+            return input("ワンタイムパスワードを入力してください:\n>")
+
+    # TODO: 違う方法を選ぶ→use a verification code を選択するの順番にする。
+
+    def _transition_to_otp_input_window(self, driver) -> None:
+        self.wait_for_page_load(driver)
+        change_sign_in_mode_button = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.ID, "signInAnotherWay"))
+        )
+        change_sign_in_mode_button.click()
+
+        self.wait_for_page_load(driver)
+        use_verification_code_button = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable(
+                (By.CSS_SELECTOR, 'div[data-value="PhoneAppOTP"]')
+            )
+        )
+        use_verification_code_button.click()
