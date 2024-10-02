@@ -65,7 +65,7 @@ urllib3==2.2.1
     # via requests
     # via selenium
     # via types-requests
-webdriver-manager==4.0.1
+webdriver-manager==4.0.2
     # via tactfiledownloader
 wsproto==1.2.0
     # via trio-websocket
